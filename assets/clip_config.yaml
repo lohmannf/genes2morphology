@@ -1,0 +1,60 @@
+hydra:
+  run:
+    dir: ./results/${now:%Y-%m-%d}/${now:%H-%M-%S}
+  job:
+    chdir: true
+    config:
+      override_dirname:
+        exclude_keys:
+          - wandb.project
+
+seed: 71
+latent_dim: 512
+temperature: 1.
+trainable: true
+
+image:
+  projection:
+    input_dim: 1024
+    latent_dim: ${latent_dim}
+    dropout: 0.8
+    residual: true
+    norm_latent: false
+
+gex:
+  projection:
+    input_dim: ${gex.kwargs.output_dim}
+    latent_dim: ${latent_dim}
+    dropout: ${image.projection.dropout}
+    residual: ${image.projection.residual}
+    norm_latent: ${image.projection.norm_latent}
+
+  kwargs:
+    input_dim: 18248
+    output_dim: ${image.projection.input_dim}
+    dropout: 0.8
+
+training:
+  log_freq: 10
+  val_freq: 10
+  batch_size: 128
+  val_batch_size: 128
+  ckpt_freq: ${training.val_freq}
+  epochs: 1000
+
+optimizer:
+  name: adamw
+  lr: 5e-6
+  decay: 0.01
+  momentum: 0.1
+
+data:
+  train_gex: ../data/space_ranger_outputs/TENX146/gex_stride5_filt.h5ad
+  train_image_dir: ../data/patches_55um_paired/TENX146
+  max_size: 10000
+  val_gex: ../data/space_ranger_outputs/TENX45/gex_filt.h5ad
+  val_image_dir: ../data/patches_55um_paired/TENX45
+
+wandb:
+  project: clip
+
